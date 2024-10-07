@@ -11,7 +11,8 @@ function App() {
   useEffect(() => {
     const fetchApodData = async () => {
       try {
-        const response = await fetch('http://localhost:3000/apod'); // Adjust URL if hosted
+        //const response = await fetch('http://localhost:3000/apod'); // Adjust URL if hosted
+        const response = await fetch('https://nasa-api-end-project.onrender.com');
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
