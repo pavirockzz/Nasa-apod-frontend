@@ -1,99 +1,49 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { CircularProgress, Container, AppBar, Toolbar, Typography, Card, CardContent, CardMedia } from '@mui/material';
+import React, { useEffect, useState } from 'react';
 
-// ErrorBoundary component (handles errors gracefully)
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
+const Apod = () => {
+    const [apodData, setApodData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
+    useEffect(() => {
+        const fetchApodData = async () => {
+            try {
+                const response = await fetch('http://localhost:3000/apod');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                setApodData(data);
+            } catch (error) {
+                setError(error.message);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-  componentDidCatch(error, info) {
-    console.error('ErrorBoundary caught an error', error, info);
-  }
+        fetchApodData();
+    }, []);
 
-  render() {
-    if (this.state.hasError) {
-      return <h1>Something went wrong.</h1>;
+    if (loading) {
+        return <div>Loading...</div>;
     }
 
-    return this.props.children;
-  }
-}
+    if (error) {
+        return <div>Error: {error}</div>;
+    }
 
-// Navbar component (renders the navigation bar)
-const Navbar = () => {
-  return (
-    <AppBar position="static">
-      <Toolbar>
-        <Typography variant="h6">NASA APOD Viewer</Typography>
-      </Toolbar>
-    </AppBar>
-  );
-};
-
-// APOD component (renders the APOD data)
-const APOD = ({ data }) => {
-  return (
-    <Card>
-      <CardMedia
-        component="img"
-        image={data.url}
-        alt={data.title}
-        style={{ height: '500px', objectFit: 'cover' }}
-      />
-      <CardContent>
-        <Typography variant="h4">{data.title}</Typography>
-        <Typography variant="body1">{data.explanation}</Typography>
-        <Typography variant="body2">Date: {data.date}</Typography>
-      </CardContent>
-    </Card>
-  );
-};
-
-// Main App component (fetches data and renders everything)
-function App() {
-  const [apodData, setApodData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    axios.get('http://localhost:5000/apod')
-      .then((response) => {
-        setApodData(response.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, []);
-
-  if (loading) {
     return (
-      <Container className="loading-container">
-        <CircularProgress />
-      </Container>
+        <div>
+            <h1>{apodData.title}</h1>
+            <p>{apodData.date}</p>
+            <img
+                src={apodData.media_type === 'image' ? apodData.url : 'https://via.placeholder.com/400'}
+                alt={apodData.title}
+                style={{ maxWidth: '100%', height: 'auto' }}
+            />
+            <p>{apodData.explanation}</p>
+        </div>
     );
-  }
+};
 
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
-  return (
-    <ErrorBoundary>
-      <Navbar />
-      <Container>
-        <APOD data={apodData} />
-      </Container>
-    </ErrorBoundary>
-  );
-}
-
-export default App;
+export default Apod;
